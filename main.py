@@ -51,10 +51,7 @@ def register():
 
         hashed_password = generate_password_hash(password, salt_length=8)
         user = User.query.filter_by(email=email).first()
-        if email == user.email:
-            error = 'User already exists. Please check your email.'
-            return render_template("login.html", error=error)
-        else:
+        if user is None:
             new_user = User(
                 email=email,
                 name=name,
@@ -65,6 +62,9 @@ def register():
             login_user(new_user)
             flash('Registration successfully!', 'success')
             return render_template("secrets.html", name=new_user.name)
+        if email == user.email:
+            error = 'User already exists. Please check your email.'
+            return render_template("login.html", error=error)
     return render_template("register.html")
 
 
@@ -80,7 +80,7 @@ def login():
             if check_password_hash(user.password, password):
                 login_user(user)
                 flash('Login successfully!', 'success')
-                return redirect(url_for('secrets'))
+                return redirect(url_for('secrets', name=user.name))
             else:
                 error = 'Incorrect password. Please try again.'
         else:
@@ -91,7 +91,7 @@ def login():
 @app.route('/secrets', methods=['GET', 'POST'])
 @login_required
 def secrets():
-    return render_template("secrets.html")
+    return render_template("secrets.html", name=current_user.name)
 
 
 @app.route('/logout')
